@@ -98,6 +98,67 @@ namespace VideoRental
             }
         }
 
+        public static void AddNewOrder()
+        {
+            Order order = Order.ReadData();
+
+            using (var unit = ClassUnitOfWorkRep.GetUnitOfWork())
+            {
+                var cassettes = unit.CassetteRepasitory.GetCassetteMax(0);// cassettes which have Amount > 0
+                Console.WriteLine("Список кассет, имеющихся в базе: \n");
+                foreach (var cassette in cassettes)
+                {
+                    Console.WriteLine($"{cassette.Id}. {cassette}\n");
+                }
+
+                Console.WriteLine("Введите через пробел номера Id, которые будут в заказе: (например, 2 13 8)");
+                string IdString = Console.ReadLine();
+                var splittingStrings = IdString.Split(' ');
+
+                int id = 0;
+                foreach (var s in splittingStrings)
+                {
+                    if (int.TryParse(s, out id))
+                    {
+                        var cassette = unit.CassetteRepasitory.Get(id);
+                        order.AddCassette(cassette);
+                    }
+                }
+
+                Console.WriteLine("Список клиентов, имеющихся в базе: \n");
+                var clients = unit.ClientRepasitory.GetAll();
+                foreach (var client in clients)
+                    Console.WriteLine($"{client.Id}. {client.Name}");
+
+                Console.Write("\nВведите Id клиента или 0 для добавления нового клиента: ");
+                IdString = Console.ReadLine();
+                if (int.TryParse(IdString, out id))
+                {
+                    if (id != 0)
+                    {
+                        var client = unit.ClientRepasitory.Get(id);
+                        client.AddOrder(order);
+                    }
+                    else
+                    {
+                        var client = Client.ReadData();
+                        if (unit.ClientRepasitory.IsClientExists(client))
+                        {
+                            Console.WriteLine("Ку! Есть уже такой клиент, к нему и добавим заказ");
+                            client = unit.ClientRepasitory.GetSame(client);
+                        }
+                        else
+                            unit.ClientRepasitory.Add(client);
+
+                        client.AddOrder(order);
+                        unit.OrderRepasitory.Add(order);
+                        unit.Save();
+                    }
+                }
+
+            }
+        }
+
         public static void ShowFilms()
         {
             using (var unit = ClassUnitOfWorkRep.GetUnitOfWork())
@@ -138,28 +199,8 @@ namespace VideoRental
 
                     case UserInput.AddNewOrder:
                         Console.WriteLine("\tФормирование нового заказа:");
-                        bool flag = true;
-                        while (flag)
-                        {
-                            Console.Write("Добавить еще? ");
-                            string flagString = Console.ReadLine();
-
-                            if (bool.TryParse(flagString, out flag))
-                            {
-                                if (flag)
-                                    Console.WriteLine("flag == true => еще добавляем");
-                                else
-                                    Console.WriteLine("flag == false => end");
-                            }
-                            else
-                            {
-                                Console.WriteLine("Что-то пошло не так... Ничего не будем добавлять");
-                                flag = false;
-                            }
-                        
-                        }
-                        Console.WriteLine("End");
-                        //AddNewOrder();
+                        AddNewOrder();
+                        Console.WriteLine("Заказ сформирован. Для продолжения ткните в клавиатуру.");
                         Console.ReadLine();
                         break;
 
