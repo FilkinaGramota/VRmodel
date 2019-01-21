@@ -10,6 +10,9 @@ namespace VideoRental
 { //repository of repository хранит ссылки на раб репозитории argo является единицей работы
     class ClassUnitOfWorkRep: UnitOfWork
     {
+        private static ClassUnitOfWorkRep instance;
+        private static readonly object locker = new Object();
+
         private readonly MineVideoRental context;
 
         public CasseteRep CassetteRepasitory { get; set; }
@@ -18,7 +21,7 @@ namespace VideoRental
         public GenreRep GenreRepasitory { get; set; }
         public ClientRep ClientRepasitory { get; set; }
 
-        public ClassUnitOfWorkRep(MineVideoRental context)
+        private ClassUnitOfWorkRep(MineVideoRental context)
         {
             this.context = context;
             CassetteRepasitory = new CasseteRepClass(context);
@@ -27,8 +30,21 @@ namespace VideoRental
             GenreRepasitory = new GenreRepClass(context);
             ClientRepasitory = new ClientRepClass(context);
         }
+        // singleton
+        public static ClassUnitOfWorkRep GetUnitOfWork()
+        {
+            if (instance == null)
+            {
+                lock (locker)
+                {
+                    if (instance == null)
+                        instance =  new ClassUnitOfWorkRep(new MineVideoRental());
+                }
+            }
+            return instance;
+        }
 
-       public int save()
+        public int Save()
         {
            return context.SaveChanges();
         }

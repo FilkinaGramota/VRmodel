@@ -14,7 +14,7 @@ namespace VideoRental
         {
             Cassette cassette = Cassette.ReadData();
             // Добавление фильмов
-            using (var unit = new ClassUnitOfWorkRep(new MineVideoRental()))
+            using (var unit = ClassUnitOfWorkRep.GetUnitOfWork())
             {
                 // если с таким названием кассетта уже есть
                 if (unit.CassetteRepasitory.IsCassetteExists(cassette))
@@ -94,7 +94,27 @@ namespace VideoRental
                 } while (!enough);
 
                 unit.CassetteRepasitory.Add(cassette);
-                unit.save();
+                unit.Save();
+            }
+        }
+
+        public static void ShowFilms()
+        {
+            using (var unit = ClassUnitOfWorkRep.GetUnitOfWork())
+            {
+                var films = unit.FilmRepasitory.GetAll();
+                foreach (var film in films)
+                    Console.WriteLine(film);
+            }
+        }
+
+        public static void ShowClientOrders()
+        {
+            using (var unit = ClassUnitOfWorkRep.GetUnitOfWork())
+            {
+                var clients = unit.ClientRepasitory.GetAll();
+                foreach (var client in clients)
+                    Console.WriteLine(client);
             }
         }
 
@@ -175,13 +195,13 @@ namespace VideoRental
 
                     case UserInput.ShowClientOrders:
                         Console.WriteLine("\tПросмотр клиентов и их заказов:");
-                        //ShowClientOrders();
+                        ShowClientOrders();
                         Console.ReadLine();
                         break;
 
                     case UserInput.ShowFilms:
                         Console.WriteLine("\tПросмотр фильмов:");
-                        //ShowFilms();
+                        ShowFilms();
                         Console.ReadLine();
                         break;
 
