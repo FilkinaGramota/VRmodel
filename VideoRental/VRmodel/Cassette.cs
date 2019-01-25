@@ -31,7 +31,7 @@ namespace VideoRental.VRmodel
         {
             StringBuilder stringBuild = new StringBuilder();
             
-            stringBuild.AppendFormat($"{Title} : ");
+            stringBuild.AppendFormat($"{Id}. {Title} : ");
             foreach (var film in Films)
                 stringBuild.Append($"{film}; ");
 

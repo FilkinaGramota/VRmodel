@@ -1,10 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Data.Entity;
 using System.Linq;
-using System.Text;
 using VideoRental.VRmodel;
-using System.Threading.Tasks;
 
 namespace VideoRental.Repositories
 {
@@ -39,11 +35,18 @@ namespace VideoRental.Repositories
             return MineVideoRentalContext.Cassettes.SingleOrDefault(c => c.Title == cassette.Title);
         }
 
-        /*public override void Delete(Cassette cassette)
+        public override void Delete(Cassette cassette)
         {
-            var films = MineVideoRentalContext.Cassettes.Where(c => c.Id == cassette.Id).Include(c => c.Films);
+            var orders = MineVideoRentalContext.Orders.Where(o => o.Cassettes.Any(c => c.Id == cassette.Id));
+            foreach (var order in orders)
+            {
+                var clients = MineVideoRentalContext.Clients.Where(cl => cl.Orders.Any(o => o.Id == order.Id));
+                MineVideoRentalContext.Clients.RemoveRange(clients.ToList());
+            }
+
+            MineVideoRentalContext.Orders.RemoveRange(orders);
             MineVideoRentalContext.Cassettes.Remove(cassette);
-        }*/
+        }
     }
 }
 

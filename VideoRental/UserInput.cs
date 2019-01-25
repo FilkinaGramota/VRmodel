@@ -6,7 +6,7 @@
 
         ShowClientOrders,
 
-        ShowFilms,
+        ShowCassettes,
         
         AddNewCassette,
 
@@ -14,12 +14,6 @@
         
         UpdateOrder,
 
-        UpdateClient,
-
-        DeleteOrder,
-
-        DeleteCassette,
-
-        DeleteAll
+        DeleteCassette
     }
 }

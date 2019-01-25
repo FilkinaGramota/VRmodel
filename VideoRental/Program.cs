@@ -1,10 +1,5 @@
 ﻿using VideoRental.VRmodel;
-using VideoRental.Repositories;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace VideoRental
 {
@@ -14,7 +9,7 @@ namespace VideoRental
         {
             Cassette cassette = Cassette.ReadData();
             // Добавление фильмов
-            using (var unit = ClassUnitOfWorkRep.GetUnitOfWork())
+            using (var unit = new ClassUnitOfWorkRep(new MineVideoRental()))
             {
                 // если с таким названием кассетта уже есть
                 if (unit.CassetteRepasitory.IsCassetteExists(cassette))
@@ -102,13 +97,13 @@ namespace VideoRental
         {
             Order order = Order.ReadData();
 
-            using (var unit = ClassUnitOfWorkRep.GetUnitOfWork())
+            using (var unit = new ClassUnitOfWorkRep(new MineVideoRental()))
             {
                 var cassettes = unit.CassetteRepasitory.GetCassetteMax(0);// cassettes which have Amount > 0
                 Console.WriteLine("Список кассет, имеющихся в базе: \n");
                 foreach (var cassette in cassettes)
                 {
-                    Console.WriteLine($"{cassette.Id}. {cassette}\n");
+                    Console.WriteLine($"{cassette}\n");
                 }
 
                 Console.WriteLine("Введите через пробел номера Id, которые будут в заказе: (например, 2 13 8)");
@@ -159,23 +154,124 @@ namespace VideoRental
             }
         }
 
-        public static void ShowFilms()
+        public static void ShowCassettes()
         {
-            using (var unit = ClassUnitOfWorkRep.GetUnitOfWork())
+            using (var unit = new ClassUnitOfWorkRep(new MineVideoRental()))
             {
-                var films = unit.FilmRepasitory.GetAll();
-                foreach (var film in films)
-                    Console.WriteLine(film);
+                var cassettes = unit.CassetteRepasitory.GetAll();
+                foreach (var cassette in cassettes)
+                {
+                    Console.WriteLine(cassette);
+                    Console.WriteLine();
+                }
             }
         }
 
         public static void ShowClientOrders()
         {
-            using (var unit = ClassUnitOfWorkRep.GetUnitOfWork())
+            using (var unit = new ClassUnitOfWorkRep(new MineVideoRental()))
             {
                 var clients = unit.ClientRepasitory.GetAll();
                 foreach (var client in clients)
                     Console.WriteLine(client);
+            }
+        }
+
+        public static void DeleteCassette()
+        {
+            using (var unit = new ClassUnitOfWorkRep(new MineVideoRental()))
+            {
+                var cassettes = unit.CassetteRepasitory.GetAll();
+                foreach (var cassette in cassettes)
+                    Console.WriteLine($"{cassette} \n");
+
+                Console.Write("Введите Id кассетты, которую больше не желаете видеть в базе: ");
+                string idString = Console.ReadLine();
+                int id = 0;
+                if (int.TryParse(idString, out id))
+                {
+                    var cassette = unit.CassetteRepasitory.Get(id);
+                    if (cassette != null)
+                    {
+                        unit.CassetteRepasitory.Delete(cassette);
+                        unit.Save();
+                        Console.WriteLine($"Кассетта c Id = {id} удалена из базы");
+                    }
+                    else
+                    {
+                        Console.WriteLine($"Не нашлась кассетта с Id = {id}");
+                    }
+                }
+                else
+                {
+                    Console.WriteLine("Тяжко с Вами... Id - это номер, число, цифра (арабская, если что)");
+                }
+            }
+        }
+
+        public static void UpdateOrder()
+        {
+            using (var unit = new ClassUnitOfWorkRep(new MineVideoRental()))
+            {
+                var orders = unit.OrderRepasitory.GetAll();
+                foreach (var order in orders)
+                    Console.WriteLine($"{order.Id}. {order}\n");
+
+                Console.Write("Введите Id заказа, который требуется изменить: ");
+                string idString = Console.ReadLine();
+                int id = 0;
+
+                if (int.TryParse(idString, out id))
+                {
+                    var order = unit.OrderRepasitory.Get(id);
+                    if (order != null)
+                    {
+                        Console.Write("Изменить дату начала заказа (0 - нет, 1 - да): ");
+                        string answerString = Console.ReadLine();
+                        int answer = 0;
+                        if (int.TryParse(answerString, out answer))
+                        {
+                            if (answer == 1)
+                            {
+                                unit.OrderRepasitory.UpdateStartDate(order);
+                                unit.Save();
+                            }
+                        }
+
+                        Console.Write("Изменить дату планируемого окончания заказа (0 - нет, 1 - да): ");
+                        answerString = Console.ReadLine();
+                        if (int.TryParse(answerString, out answer))
+                        {
+                            if (answer == 1)
+                            {
+                                unit.OrderRepasitory.UpdateEndDate(order);
+                                unit.Save();
+                            }
+                        }
+
+                        Console.Write("Изменить дату фактического окончания заказа (0 - нет, 1 - да): ");
+                        answerString = Console.ReadLine();
+                        if (int.TryParse(answerString, out answer))
+                        {
+                            if (answer == 1)
+                            {
+                                unit.OrderRepasitory.UpdateFactEndDate(order);
+                                unit.Save();
+                            }
+                        }
+
+                        Console.Write("Добавить еще одну кассетту в заказ (0 - нет, 1 - да): ");
+                        answerString = Console.ReadLine();
+                        if (int.TryParse(answerString, out answer))
+                        {
+                            if (answer == 1)
+                            {
+                                unit.OrderRepasitory.UpdateCassetteList(order);
+                                unit.Save();
+                            }
+                        }
+                    }
+                }
             }
         }
 
@@ -204,33 +300,15 @@ namespace VideoRental
                         Console.ReadLine();
                         break;
 
-                    case UserInput.DeleteAll:
-                        Console.WriteLine("\tГори, гори ясно, чтобы всё погасло!");
-                        //DeleteALL();
-                        Console.ReadLine();
-                        break;
-
                     case UserInput.DeleteCassette:
                         Console.WriteLine("\tУдалить из базы кассетту:");
-                        //DeleteCassette();
-                        Console.ReadLine();
-                        break;
-
-                    case UserInput.DeleteOrder:
-                        Console.WriteLine("\tУдаление из базы заказа:");
-                        //DeleteOrder();
-                        Console.ReadLine();
-                        break;
-
-                    case UserInput.UpdateClient:
-                        Console.WriteLine("\tОбновление данных у клиента:");
-                        //UpdateClient();
+                        DeleteCassette();
                         Console.ReadLine();
                         break;
 
                     case UserInput.UpdateOrder:
                         Console.WriteLine("\tОбновление заказа:");
-                        //UpdateOrder();
+                        UpdateOrder();
                         Console.ReadLine();
                         break;
 
@@ -240,9 +318,9 @@ namespace VideoRental
                         Console.ReadLine();
                         break;
 
-                    case UserInput.ShowFilms:
-                        Console.WriteLine("\tПросмотр фильмов:");
-                        ShowFilms();
+                    case UserInput.ShowCassettes:
+                        Console.WriteLine("\tСписок кассетт:\n");
+                        ShowCassettes();
                         Console.ReadLine();
                         break;
 
@@ -257,112 +335,6 @@ namespace VideoRental
                         break;
                 }
             } while (choice != UserInput.Exit);
-
-
-            /*var comedy = new Genre { Type = "Комедия" };
-            var drama = new Genre { Type = "Драма" };
-            var melodrama = new Genre { Type = "Мелодрама" };
-            var military = new Genre { Type = "Военный" };
-            var musical = new Genre { Type = "Мюзикл" };
-            var fantasy = new Genre { Type = "Фэнтези" };
-
-            var Devchata = new Film { Title = "Девчата", Year = 1962 };
-            Devchata.AddGenre(comedy);
-            Devchata.AddGenre(melodrama);
-
-            var Casablanca = new Film { Title = "Касабланка", Year = 1942 };
-            Casablanca.AddGenre(drama);
-            Casablanca.AddGenre(melodrama);
-            Casablanca.AddGenre(military);
-
-            var SleepingBeauty = new Film { Title = "Спящая красавица", Year = 1958 };
-            SleepingBeauty.AddGenre(musical);
-            SleepingBeauty.AddGenre(melodrama);
-            SleepingBeauty.AddGenre(fantasy);
-
-            Cassette cassette1 = new Cassette { Amount = 1, Title = "Странное собрание" };
-            cassette1.AddFilm(Casablanca);
-            cassette1.AddFilm(Devchata);
-
-            Cassette cassette4 = new Cassette { Amount = 4, Title = "Коллекция Disney. Спящая красавица" };
-            cassette4.AddFilm(SleepingBeauty);
-
-            var client = new Client { Name = new Name("Таня", "Тугодубодумова") };
-
-            var order1 = new Order { OrderStart = new DateTime(2019, 1, 14), OrderFinish = new DateTime(2019, 1, 18) };
-            order1.AddCassette(cassette1);
-            order1.Cost = 100 * (int)order1.OrderFinish.Subtract(order1.OrderStart).TotalDays;
-
-            var order2 = new Order { OrderStart = new DateTime(2019, 1, 19), OrderFinish = new DateTime(2019, 1, 26) };
-            order2.AddCassette(cassette4);
-            order2.Cost = 100 * (int)order2.OrderFinish.Subtract(order2.OrderStart).TotalDays;
-
-            client.AddOrder(order1);
-            client.AddOrder(order2);
-
-            order1.Close(new DateTime(2019, 1, 19));*/
-            /*
-            using (ClassUnitOfWorkRep unit = new ClassUnitOfWorkRep(new MineVideoRental()))
-            {
-                unit.GenreRepasitory.Add(comedy);
-                unit.GenreRepasitory.Add(drama);
-                unit.GenreRepasitory.Add(melodrama);
-                unit.GenreRepasitory.Add(military);
-                unit.GenreRepasitory.Add(musical);
-                unit.GenreRepasitory.Add(fantasy);
-
-                unit.FilmRepasitory.Add(Devchata);
-                unit.FilmRepasitory.Add(Casablanca);
-                unit.FilmRepasitory.Add(SleepingBeauty);
-
-                unit.CassetteRepasitory.Add(cassette1);
-                unit.CassetteRepasitory.Add(cassette4);
-
-                unit.OrderRepasitory.Add(order1);
-                unit.OrderRepasitory.Add(order2);
-                unit.ClientRepasitory.Add(client);
-
-                unit.save();
-
-                var clients = unit.ClientRepasitory.GetAll();
-                foreach (var c in clients)
-                    Console.WriteLine(c);
-
-                var cl = unit.ClientRepasitory.Get(5);
-                Console.WriteLine(cl);
-
-                var cass = unit.CassetteRepasitory.Get(9);
-                unit.CassetteRepasitory.Delete(cass);
-                unit.save();
-
-                Console.ReadLine();
-
-                /*IList<Cassette> allCassettes = unit.CassetteRepasitory.GetAll().ToList();
-
-                Console.WriteLine("All cassettes:");
-                foreach (var cassette in allCassettes)
-                    Console.WriteLine($"Cassette id={cassette.Id}, amount={cassette.Amount}");
-
-                IList<Cassette> minCassettes = unit.CassetteRepasitory.GetCassetteMin(3).ToList();
-                Console.WriteLine("Cassettes which have amount < 3 :");
-                foreach (var cassette in minCassettes)
-                    Console.WriteLine($"Cassette id={cassette.Id}, amount={cassette.Amount}");
-
-                IList<Cassette> maxCassettes = unit.CassetteRepasitory.GetCassetteMax(3).ToList();
-                Console.WriteLine("Cassettes which have amount >= 3 :");
-                foreach (var cassette in maxCassettes)
-                    Console.WriteLine($"Cassette id={cassette.Id}, amount={cassette.Amount}");
-
-                var films = unit.FilmRepasitory.GetFilmByTitle("Девчата");
-                foreach (var film in films)
-                {
-                    var genres = unit.GenreRepasitory.GetGenresOfFilm(film);
-                    Console.WriteLine($"Genres of film {film.Title}:");
-                    foreach (var g in genres)
-                        Console.WriteLine(g.Type);
-                }
-                
-            }*/
         }
     }
 }

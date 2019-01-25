@@ -1,9 +1,4 @@
-﻿using System;
-using VideoRental.VRmodel;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using VideoRental.VRmodel;
 
 namespace VideoRental.Repositories
 {

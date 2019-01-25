@@ -1,9 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
+﻿
 using System.Data.Entity;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace VideoRental.Repositories
 {
@@ -23,9 +20,8 @@ namespace VideoRental.Repositories
         }
         public Class Get(int ID)
         {
-
+            // если не находит, то возвращает null
             return dbContext.Set<Class>().Find(ID);
-
         }
         public IQueryable<Class> GetAll()
         {

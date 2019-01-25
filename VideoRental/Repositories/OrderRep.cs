@@ -1,14 +1,13 @@
-﻿using System;
-using VideoRental.VRmodel;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using VideoRental.VRmodel;
+
 
 namespace VideoRental.Repositories
 {
     interface OrderRep:EntityRep<Order>
     {
-        
+        void UpdateStartDate(Order order);
+        void UpdateEndDate(Order order);
+        void UpdateFactEndDate(Order order);
+        void UpdateCassetteList(Order order);
     }
 }
